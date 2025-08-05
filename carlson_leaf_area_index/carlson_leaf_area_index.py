@@ -66,3 +66,44 @@ def carlson_leaf_area_index(
     LAI = rt.clip(-np.log(1 - fIPAR) * (1 / KPAR), min_LAI, max_LAI)  # Beer-Lambert law for canopy
     
     return LAI
+
+def inverse_carlson_NDVI(
+        LAI: Union[Raster, np.ndarray],
+        min_fIPAR: float = MIN_FIPAR,
+        max_fIPAR: float = MAX_FIPAR,
+        min_LAI: float = MIN_LAI,
+        max_LAI: float = MAX_LAI) -> Union[Raster, np.ndarray]:
+    """
+    Inverse of carlson_leaf_area_index: Converts Leaf Area Index (LAI) back to NDVI using the inverse of the Beer-Lambert law and the original NDVI-fIPAR relationship.
+
+    Explanation:
+        1. Clip LAI to valid range.
+        2. Compute fIPAR from LAI using the inverse Beer-Lambert law:
+           fIPAR = 1 - exp(-KPAR * LAI)
+        3. Clip fIPAR to valid range.
+        4. Compute NDVI from fIPAR:
+           NDVI = fIPAR + 0.05
+
+    Parameters:
+        LAI (Union[Raster, np.ndarray]): Input LAI data.
+        min_fIPAR (float): Minimum fIPAR value (default 0.0).
+        max_fIPAR (float): Maximum fIPAR value (default 1.0).
+        min_LAI (float): Minimum LAI value (default 0.0).
+        max_LAI (float): Maximum LAI value (default 10.0).
+
+    Returns:
+        Union[Raster, np.ndarray]: Estimated NDVI data.
+    """
+    # Step 1: Clip LAI to valid range
+    LAI = rt.clip(LAI, min_LAI, max_LAI)
+
+    # Step 2: Compute fIPAR from LAI (inverse Beer-Lambert law)
+    fIPAR = 1 - np.exp(-KPAR * LAI)
+
+    # Step 3: Clip fIPAR to valid range
+    fIPAR = rt.clip(fIPAR, min_fIPAR, max_fIPAR)
+
+    # Step 4: Compute NDVI from fIPAR
+    NDVI = fIPAR + 0.05
+
+    return NDVI
